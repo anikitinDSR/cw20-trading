@@ -32,7 +32,7 @@ P.S. All the next `osmosisd` commands will be with assumption that key alias if 
 ## Store contract
 
 ```bash
-osmosisd tx wasm store artifacts/cw20_base.wasm --from osmosis --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+osmosisd tx wasm store artifacts/cw20_token.wasm --from osmosis --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
 ```
 
 It returns the `code_id` in response and might be used for instantiating a contract.
@@ -42,7 +42,7 @@ It returns the `code_id` in response and might be used for instantiating a contr
 For instantiating you need only send the message like:
 
 ```bash
-osmosisd tx wasm instantiate <code_id> '{}' --from local --label "cw20-trading" --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+osmosisd tx wasm instantiate <code_id> '{}' --from osmosis --label "cw20-trading" --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5 --no-admin
 ```
 
 this command returns the contract address which can be used as a reference for all the next commands.
@@ -219,3 +219,153 @@ Returns the structure like:
 ```
 
 # Example flow
+
+1. Store contract
+```
+osmosisd tx wasm store artifacts/cw20_token.wasm --from osmosis --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+2. Instantiate
+```
+osmosisd tx wasm instantiate 4347 '{}' --from osmosis --label "cw20-trading" --gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5 --no-admin
+```
+3. Create a `RUB` token
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"create_token": {"name": "ruble", "denom": "RUB", "initial_balances": [{"address": "osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6", "amount": "1000"}, {"address": "osmo19n8knfdas6xxqyya7e46dnx9lqjwalgagf8u4w", "amount": "2000"}]}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+4. Create `USD` token
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"create_token": {"name": "dollar", "denom": "USD", "initial_balances": [{"address": "osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu", "amount": "1000"}, {"address": "osmo1am7n67uvmg03e04tjm3a96zer3d89jnw30676z", "amount": "2000"}]}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+5. Create a bank
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"create_bank": {"id": "bank00001", "name": "Universal Bank", "balance": "100000000000"}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+6. Setup exchange rate
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"set_exchange_rate": {"denom_from": "RUB", "denom_to": "USD", "precision": 3, "rate": 200}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+7. Get the TokenInfo
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"token_info": {"denom": "RUB"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  denom: RUB
+  initial_balances:
+  - address: osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6
+    amount: "1000"
+  - address: osmo19n8knfdas6xxqyya7e46dnx9lqjwalgagf8u4w
+    amount: "2000"
+  name: ruble
+  total_supply: "3000"
+```
+And `USD`:
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"token_info": {"denom": "USD"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  denom: USD
+  initial_balances:
+  - address: osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu
+    amount: "1000"
+  - address: osmo1am7n67uvmg03e04tjm3a96zer3d89jnw30676z
+    amount: "2000"
+  name: dollar
+  total_supply: "3000"
+```
+8. Get Balances
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"balance": {"address": "osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "1000"
+  denom: RUB
+```
+And for another
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"balance": {"address": "osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "1000"
+  denom: USD
+```
+9. Get BankInfo
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"bank_info": {"id": "bank00001"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  balance: "100000000000"
+  id: bank00001
+  name: Universal Bank
+```
+10. Get ExchangeRateInfo
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"exchange_rate_info": {"id": "RUBUSD"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  denom_from: RUB
+  denom_to: USD
+  id: RUBUSD
+  precision: 3
+  rate: 200
+```
+And Verse exchange rate:
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"exchange_rate_info": {"id": "USDRUB"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  denom_from: USD
+  denom_to: RUB
+  id: USDRUB
+  precision: 3
+  rate: 5000
+```
+11. Send txn to bank
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"send_to_bank": {"id": "txn00001", "bank_id": "bank00001", "from": "osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6", "to": "osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu", "amount": "1000"}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+12. Get TransactionInfo
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"transaction_info": {"id": "txn00001"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "1000"
+  bank_id: bank00001
+  denom_from: RUB
+  denom_to: USD
+  from: osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6
+  id: txn00001
+  status: sent_to_bank
+  to: osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu
+```
+13. Send to recipient
+```
+osmosisd tx wasm execute osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"send_to_recipient": {"transaction_id": "txn00001"}}' --from osmosis \
+--gas-prices 0.1uosmo --gas auto --gas-adjustment 1.3 -y --output json -b block --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+```
+14.  Get the TransactionInfo again
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"transaction_info": {"id": "txn00001"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "1000"
+  bank_id: bank00001
+  denom_from: RUB
+  denom_to: USD
+  from: osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6
+  id: txn00001
+  status: sent_to_recipient
+  to: osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu
+```
+The status was changed to "SentToRecipient"
+15.  Get balances again
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"balance": {"address": "osmo138cvlfj0j7rgn9jsj428kxrnauqgytr7ej0vp6"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "0"
+  denom: RUB
+```
+And for recipient:
+```
+osmosisd query wasm contract-state smart osmo10dcwtvjqzsmsgq9kjk76ls5s67z02dhuesx2qqf8hqft97g2hzrsegncr8 '{"balance": {"address": "osmo1zr4d5vkwmuhtrh58dq0r28wp29z2r4mtp9mhxu"}}' --node https://rpc.osmotest5.osmosis.zone:443 --chain-id osmo-test-5
+data:
+  amount: "1200"
+  denom: USD
+```
+
+So, the exchange rate was `0.2`, so the balance is as expected
