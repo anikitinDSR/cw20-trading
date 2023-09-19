@@ -22,6 +22,8 @@ docker run --rm -v "$(pwd)":/code \
 stock error strategy program tribe identify dune current kiss oil brisk improve carbon brick sausage vital cradle alien illegal resist lawsuit seed purpose pear
 ```
 
+Account, associated with this mnemonic has some tokens for testing
+
 Recover:
 
 ```bash
